@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${id == null} ? 'Novo técnico' : 'Editar técnico')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('tecnicos')}"></nav>
+<main class="container" style="max-width: 640px">
+    <h1 class="h3 mb-3" th:text="${id == null} ? 'Novo técnico' : 'Editar técnico #' + ${id}">Técnico</h1>
+
+    <form class="card p-4" th:object="${form}" novalidate
+          th:action="${id == null} ? @{/app/tecnicos} : @{/app/tecnicos/{id}(id=${id})}"
+          th:method="${id == null} ? 'post' : 'put'">
+        <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+
+        <div class="mb-3">
+            <label for="nome" class="form-label">Nome *</label>
+            <input type="text" class="form-control" th:field="*{nome}" th:errorclass="is-invalid" maxlength="100">
+            <div class="invalid-feedback" th:errors="*{nome}"></div>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">E-mail *</label>
+            <input type="email" class="form-control" th:field="*{email}" th:errorclass="is-invalid">
+            <div class="invalid-feedback" th:errors="*{email}"></div>
+        </div>
+        <div class="mb-3">
+            <label for="perfil" class="form-label">Perfil *</label>
+            <select class="form-select" th:field="*{perfil}" th:errorclass="is-invalid">
+                <option value="">Selecione...</option>
+                <option th:each="p : ${perfis}" th:value="${p}" th:text="${p}">TECNICO</option>
+            </select>
+            <div class="invalid-feedback" th:errors="*{perfil}"></div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a class="btn btn-outline-secondary" th:href="@{/app/tecnicos}">Cancelar</a>
+        </div>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

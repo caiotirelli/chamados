@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head(${id == null} ? 'Abrir chamado' : 'Editar chamado')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('chamados')}"></nav>
+<main class="container" style="max-width: 720px">
+    <h1 class="h3 mb-3" th:text="${id == null} ? 'Abrir chamado' : 'Editar chamado #' + ${id}">Chamado</h1>
+
+    <div class="alert alert-warning" th:if="${#lists.isEmpty(clientes) or #lists.isEmpty(categorias)}">
+        Para abrir um chamado é preciso ter pelo menos um
+        <a th:href="@{/app/clientes/novo}">cliente</a> e uma <a th:href="@{/app/categorias/novo}">categoria</a> cadastrados.
+    </div>
+
+    <form class="card p-4" th:object="${form}" novalidate
+          th:action="${id == null} ? @{/app/chamados} : @{/app/chamados/{id}(id=${id})}"
+          th:method="${id == null} ? 'post' : 'put'">
+        <div th:replace="~{fragments/layout :: errosGlobais}"></div>
+
+        <div class="mb-3">
+            <label for="titulo" class="form-label">Título *</label>
+            <input type="text" class="form-control" th:field="*{titulo}" th:errorclass="is-invalid" maxlength="100">
+            <div class="invalid-feedback" th:errors="*{titulo}"></div>
+        </div>
+        <div class="mb-3">
+            <label for="descricao" class="form-label">Descrição *</label>
+            <textarea class="form-control" rows="4" th:field="*{descricao}" th:errorclass="is-invalid" maxlength="1000"></textarea>
+            <div class="invalid-feedback" th:errors="*{descricao}"></div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-md-4">
+                <label for="prioridade" class="form-label">Prioridade *</label>
+                <select class="form-select" th:field="*{prioridade}" th:errorclass="is-invalid">
+                    <option value="">Selecione...</option>
+                    <option th:each="p : ${prioridades}" th:value="${p}" th:text="${p}">ALTA</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{prioridade}"></div>
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="clienteId" class="form-label">Cliente *</label>
+                <select class="form-select" th:field="*{clienteId}" th:errorclass="is-invalid">
+                    <option value="">Selecione...</option>
+                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nome}">Cliente</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{clienteId}"></div>
+            </div>
+            <div class="col-12 col-md-4">
+                <label for="categoriaId" class="form-label">Categoria *</label>
+                <select class="form-select" th:field="*{categoriaId}" th:errorclass="is-invalid">
+                    <option value="">Selecione...</option>
+                    <option th:each="c : ${categorias}" th:value="${c.id}" th:text="${c.nome}">Categoria</option>
+                </select>
+                <div class="invalid-feedback" th:errors="*{categoriaId}"></div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <a class="btn btn-outline-secondary"
+               th:href="${id == null} ? @{/app/chamados} : @{/app/chamados/{id}(id=${id})}">Cancelar</a>
+        </div>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
