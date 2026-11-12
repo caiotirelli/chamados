@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Chamado #' + ${chamado.id})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('chamados')}"></nav>
+<main class="container" th:with="fechado=${chamado.status.name() == 'FECHADO'}">
+    <div th:replace="~{fragments/layout :: mensagens}"></div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h3 mb-0">
+            <span th:text="'#' + ${chamado.id} + ' ' + ${chamado.titulo}">#1 Título</span>
+            <span class="badge fs-6 align-middle" th:classappend="'status-' + ${chamado.status}"
+                  th:text="${#strings.replace(chamado.status, '_', ' ')}">ABERTO</span>
+        </h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" th:href="@{/app/chamados}">Voltar</a>
+            <a class="btn btn-outline-primary" th:unless="${fechado}"
+               th:href="@{/app/chamados/{id}/editar(id=${chamado.id})}">Editar</a>
+            <form th:action="@{/app/chamados/{id}(id=${chamado.id})}" th:method="delete"
+                  onsubmit="return confirm('Excluir este chamado e seus comentários?')">
+                <button type="submit" class="btn btn-outline-danger">Excluir</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-8">
+            <div class="card p-4 mb-3">
+                <h2 class="h6 text-muted">Descrição</h2>
+                <p class="mb-0" style="white-space: pre-line" th:text="${chamado.descricao}">Descrição</p>
+            </div>
+
+            <div class="card p-4">
+                <h2 class="h5 mb-3">Comentários</h2>
+                <p class="text-muted" th:if="${#lists.isEmpty(detalhe.comentarios)}">Nenhum comentário ainda.</p>
+                <div class="comentario mb-3" th:each="m : ${detalhe.comentarios}">
+                    <div class="small text-muted">
+                        <strong th:text="${m.autor}">Autor</strong> ·
+                        <span th:text="${#temporals.format(m.data, 'dd/MM/yyyy HH:mm')}">data</span>
+                    </div>
+                    <div style="white-space: pre-line" th:text="${m.texto}">Texto</div>
+                </div>
+
+                <form th:unless="${fechado}" class="border-top pt-3" novalidate
+                      th:action="@{/app/chamados/{id}/comentarios(id=${chamado.id})}" method="post"
+                      th:object="${comentarioForm}">
+                    <div class="mb-2">
+                        <label for="autor" class="form-label">Autor *</label>
+                        <input type="text" class="form-control" th:field="*{autor}" th:errorclass="is-invalid" maxlength="100">
+                        <div class="invalid-feedback" th:errors="*{autor}"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="texto" class="form-label">Comentário *</label>
+                        <textarea class="form-control" rows="3" th:field="*{texto}" th:errorclass="is-invalid" maxlength="1000"></textarea>
+                        <div class="invalid-feedback" th:errors="*{texto}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Comentar</button>
+                </form>
+                <p class="text-muted small mb-0" th:if="${fechado}">Chamado fechado: não aceita novos comentários.</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card p-4 mb-3">
+                <dl class="mb-0">
+                    <dt>Prioridade</dt>
+                    <dd><span class="badge" th:classappend="'prio-' + ${chamado.prioridade}" th:text="${chamado.prioridade}">ALTA</span></dd>
+                    <dt>Cliente</dt>
+                    <dd th:text="${chamado.clienteNome}">Cliente</dd>
+                    <dt>Categoria</dt>
+                    <dd th:text="${chamado.categoriaNome}">Categoria</dd>
+                    <dt>Técnico</dt>
+                    <dd th:text="${chamado.tecnicoNome} ?: 'Não atribuído'">Técnico</dd>
+                    <dt>Abertura</dt>
+                    <dd th:text="${#temporals.format(chamado.dataAbertura, 'dd/MM/yyyy HH:mm')}">data</dd>
+                    <dt>Fechamento</dt>
+                    <dd class="mb-0" th:text="${chamado.dataFechamento != null} ? ${#temporals.format(chamado.dataFechamento, 'dd/MM/yyyy HH:mm')} : '-'">-</dd>
+                </dl>
+            </div>
+
+            <th:block th:unless="${fechado}">
+                <!-- PATCH /app/chamados/{id}/atribuir -->
+                <form class="card p-4 mb-3" th:action="@{/app/chamados/{id}/atribuir(id=${chamado.id})}" th:method="patch">
+                    <label for="tecnicoId" class="form-label fw-semibold">Atribuir técnico</label>
+                    <select class="form-select mb-2" id="tecnicoId" name="tecnicoId">
+                        <option value="">Selecione...</option>
+                        <option th:each="t : ${tecnicos}" th:value="${t.id}" th:selected="${t.id == chamado.tecnicoId}"
+                                th:text="${t.nome} + ' (' + ${t.perfil} + ')'">Técnico</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary w-100">Atribuir</button>
+                </form>
+
+                <!-- PATCH /app/chamados/{id}/status: só mostra as transições permitidas -->
+                <form class="card p-4" th:action="@{/app/chamados/{id}/status(id=${chamado.id})}" th:method="patch">
+                    <label for="novoStatus" class="form-label fw-semibold">Alterar status</label>
+                    <select class="form-select mb-2" id="novoStatus" name="status">
+                        <option value="">Selecione...</option>
+                        <option th:each="s : ${proximosStatus}" th:value="${s}"
+                                th:text="${#strings.replace(s, '_', ' ')}">FECHADO</option>
+                    </select>
+                    <button type="submit" class="btn btn-outline-primary w-100">Alterar</button>
+                </form>
+            </th:block>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

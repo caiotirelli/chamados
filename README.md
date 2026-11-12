@@ -29,6 +29,28 @@ $env:DB_URL="jdbc:postgresql://localhost:5432/chamados"; $env:DB_USER="postgres"
 .\mvnw spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
 
+## Front-end (Thymeleaf)
+
+Telas HTML renderizadas no servidor com **Spring MVC + Thymeleaf**, acessíveis em http://localhost:8080
+(a raiz redireciona para `/app/chamados`). Os controllers web (`web/*WebController`) usam **os mesmos
+services** da API REST, então todas as regras de negócio valem também nas telas.
+
+| Tela | Rota | O que faz |
+|---|---|---|
+| Chamados | `/app/chamados` | Lista com filtros (status, prioridade, cliente) e paginação |
+| Detalhe | `/app/chamados/{id}` | Dados, atribuir técnico, alterar status (só transições válidas), comentários, excluir |
+| Clientes / Categorias / Técnicos | `/app/clientes`, `/app/categorias`, `/app/tecnicos` | CRUD completo (listar, criar, editar, excluir) |
+
+Padrões Spring utilizados:
+
+- `@Controller` + `Model` + templates em `src/main/resources/templates` (layout comum em `fragments/layout.html`).
+- Form backing objects (`web/form/*Form`) com Bean Validation: `@Valid` + `BindingResult` reexibem o formulário com os erros de cada campo.
+- **Post/Redirect/Get** com `RedirectAttributes` (mensagens flash de sucesso/erro).
+- Verbos REST nos formulários (`th:method="put|patch|delete"`) via `HiddenHttpMethodFilter`
+  (`spring.mvc.hiddenmethod.filter.enabled=true`).
+- `WebExceptionHandler` (`@ControllerAdvice`) mostra a página `erro.html` nas telas; o `GlobalExceptionHandler`
+  continua devolvendo JSON apenas para os `@RestController`.
+
 ## Rotas
 
 | Método | Rota | Ação | Sucesso |
