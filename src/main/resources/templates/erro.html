@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragments/layout :: head('Erro')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('')}"></nav>
+<main class="container">
+    <div class="card p-4 text-center">
+        <h1 class="display-6" th:text="'Erro ' + ${status}">Erro</h1>
+        <p class="lead" th:text="${mensagem}">Mensagem</p>
+        <div><a class="btn btn-primary" th:href="@{/app/chamados}">Voltar para os chamados</a></div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
